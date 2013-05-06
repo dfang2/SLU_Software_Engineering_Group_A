@@ -70,12 +70,12 @@ while True:
         
     # Handler for tweet_pull type, for tweet_trender.
     elif rcvd['type'] == "tweet_pull":
-        print "recieved query for %s over the date range of %s" % (rcvd['company'], rcvd['dateRange'])
+        print "recieved query for %s" % (rcvd['company'])
         pulled_tweets = []
         
         for row in c.execute("SELECT * FROM tweets WHERE company = '%s'" % (rcvd['company'])):
-            if ((int(row[1][8:10]) == int(rcvd['dateRange'][8:10])) and (int(row[1][0:4]) == int(rcvd['dateRange'][0:4])) and (int(row[1][5:7]) == int(rcvd['dateRange'][5:7]))):
-                pulled_tweets.append(row)
+            #if ((int(row[1][8:10]) == int(rcvd['dateRange'][8:10])) and (int(row[1][0:4]) == int(rcvd['dateRange'][0:4])) and (int(row[1][5:7]) == int(rcvd['dateRange'][5:7]))):
+	    pulled_tweets.append(row)
         print "sending %d tweets to tweet_trender" % len(pulled_tweets)
         message = json.dumps(pulled_tweets)
         socket.send(message)
@@ -83,6 +83,7 @@ while True:
     elif rcvd['type'] == 'avgSentiment_push':
         pprint.pprint(rcvd)
         print "recieved push request for %s avgerage sentiment on %s" % (rcvd['company'], rcvd['dateRange'])
+	c.execute("DELETE FROM trendPoints WHERE dateRange = '%s' and company = '%s'" % (rcvd['dateRange'], rcvd['company']))
         c.execute("INSERT INTO trendPoints VALUES(NULL, '%s', '%s', '%d', '%d', '%d', '%d', '%d')" % (rcvd['dateRange'], rcvd['company'], rcvd['averageValue'], rcvd['positive'], rcvd['negative'], rcvd['neutral'], rcvd['dataVolume']))
         #'rcvd['dataType'],  rcvd['sentiment'], rcvd['volume']))
         sdb.conn.commit()
@@ -92,6 +93,9 @@ while True:
     elif rcvd['type'] == 'avgSentiment_pull':
         print "recieved query for %s over the date range of %s" % (rcvd['symbol'], rcvd['dateRange'])
         pulled_sentiments = []
+
+	for row in c.execute("select * from trendPoints"):
+		print row
         
         for row in c.execute("SELECT trendID, dateRange, company, averageValue, positive, negative, neutral, dataVolume FROM trendPoints WHERE company = '%s'" % (rcvd['symbol'])):
             #if ((int(row[1][8:10]) == int(rcvd['dateRange'][8:10])) and (int(row[1][0:4]) == int(rcvd['dateRange'][0:4])) and (int(row[1][5:7]) == int(rcvd['dateRange'][5:7]))):
@@ -110,7 +114,7 @@ while True:
 	companyList = []
 	
 	for row in c.execute("select distinct company from tweets"):
-		companyList.append(row)
+		companyList.append(row[0])
 
         message = json.dumps(companyList)
         socket.send(message)
@@ -121,10 +125,54 @@ while True:
 	print "received query for list of dates"
 	companyDates = []
 
-	for row in c.execute("select date from tweets where company = '%s'" % (rcvd['company'])):
-		companyDates.append(row)
+	previouslyUsed = []
+	for row in c.execute("select distinct timestamp from tweets where company = '%s'" % (rcvd['company'])):
+		if(row[0][0:10] not in previouslyUsed):
+			companyDates.append(row[0][0:10])
+			previouslyUsed.append(row[0][0:10])
 
 	message = json.dumps(companyDates)
+	socket.send(message)
+
+
+    elif rcvd['type'] == 'gui_tweet_pull':
+	print "recieved query for tweet pull"
+	tweetInfo = {}
+
+	for i in range(len(rcvd['companies'])):
+		start = rcvd['start_dates'][i-1]
+		end = rcvd['end_dates'][i-1]
+
+		startSum = int(start[0:4])*1000 + int(start[5:7])*10 + int(start[8:10])
+		endSum = int(end[0:4])*1000 + int(end[5:7])*10 + int(end[8:10])
+
+		tweetInfo[rcvd['companies'][i-1]] = []
+		pos = 0
+		neg = 0
+		neu = 0
+		total = 0
+
+		for row in c.execute("select * from tweets where company = '%s'" % (rcvd['companies'][i-1].lower())):
+			rowSum = int(row[1][0:4])*1000 + int(row[1][5:7])*10 + int(row[1][8:10])
+			if(rowSum >= startSum and rowSum <= endSum):
+				if(row[3] == 'positive'):
+					pos = pos+1
+				elif(row[3] == 'negative'):
+					neg = neg+1
+				else:
+					neu = neu+1
+
+				total = total+1
+
+		#do not plan on displaying neutral, implied
+
+
+		tweetInfo[rcvd['companies'][i-1]].append(total)
+		tweetInfo[rcvd['companies'][i-1]].append(pos)
+		tweetInfo[rcvd['companies'][i-1]].append(neg)
+
+	print tweetInfo
+	message = json.dumps(tweetInfo)
 	socket.send(message)
 	
 

@@ -95,7 +95,7 @@ class TweetCache:
 		#get 25 pages for each company
 		#if not 25 pages break
 		tweets = []
-
+		print "Companies List: ", self.companies
                 for c in self.companies:
 			#get first page
 			query=self.generateQuery(c)
@@ -107,7 +107,10 @@ class TweetCache:
 					for pt in tweets[S_RESULTS]:
 						self.weightedTweets.append(WeightedTweet(pt, c))
 				except KeyError:
-					raise TweetCacheError("End of New Tweets")
+					print "End of New Tweets"
+					break
+					#raise TweetCacheError("End of New Tweets")
+
 				try:
 					query=S_NEXT_PAGE_QUERY+tweets["next_page"]
 				except KeyError:
