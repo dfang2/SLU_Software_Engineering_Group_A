@@ -111,8 +111,8 @@ class graphanalysis:
       else:
         l_time = s_size
       for m in range(l_time):
-#for i in range(len(self.dtarr)-delay):
-#print "arr",self.arr[i],"another arr",other.arr[i]
+
+        print "arr",self.arr[i],"another arr",other.arr[i]
         cor_list.append([self.arr[start + m],other.arr[m]])
         cor_list.sort(key=lambda tup:tup[1])
     else:
