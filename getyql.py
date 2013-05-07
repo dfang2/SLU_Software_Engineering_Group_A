@@ -23,7 +23,7 @@ from datetime import date
 class simpledb:
   def __init__(self):
     # constructor, open our connection
-    self.conn = sqlite3.connect("database.db")
+    self.conn = sqlite3.connect("sample.db")
 
   def newdb(self):
     # Instantiate the database
