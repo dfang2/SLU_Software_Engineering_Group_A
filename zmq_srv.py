@@ -159,9 +159,9 @@ while True:
 		for row in c.execute("select * from tweets where company = '%s'" % (rcvd['companies'][i-1].lower())):
 			rowSum = int(row[1][0:4])*1000 + int(row[1][5:7])*10 + int(row[1][8:10])
 			if(rowSum >= startSum and rowSum <= endSum):
-				if(row[3] == 'pos'):
+				if(row[3] == 'pos' or row[3] == 'positive'):
 					pos = pos+1
-				elif(row[3] == 'neg'):
+				elif(row[3] == 'neg' or row[3] == 'negative'):
 					neg = neg+1
 				else:
 					neu = neu+1
