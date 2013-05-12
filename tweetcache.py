@@ -17,6 +17,7 @@ S_RESULTS_PER_PAGE="&rpp=100"
 S_SINCE_ID="&since_id="
 S_MAX_ID="&max_id="
 S_PAGE_NUM="&page="
+S_LANG = "%20lang%3Aen"
 
 #numeric constants
 N_RESULTS_PER_PAGE=100
@@ -188,8 +189,8 @@ class TweetCache:
 
 	def generateQuery(self, c, maxID=0, i=0):
 		if(maxID == 0):
-			return S_TWEET_QUERY+c+S_RESULTS_PER_PAGE+S_SINCE_ID+self.sinceID
-		return S_TWEET_QUERY+c+S_RESULTS_PER_PAGE+S_MAX_ID+self.maxID+S_PAGE_NUM+i
+			return S_TWEET_QUERY+c+S_LANG+S_RESULTS_PER_PAGE+S_SINCE_ID+self.sinceID
+		return S_TWEET_QUERY+c+S_LANG+S_RESULTS_PER_PAGE+S_MAX_ID+self.maxID+S_PAGE_NUM+i
 
 	#number of tweets currently in cache
 	def getTweetCount(self):
