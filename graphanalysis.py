@@ -89,12 +89,7 @@ class graphanalysis:
     #pprint.pprint(self.combined_sorted)
 
   def starts_within(self, other):
-    dtarr = self.dtarr.tolist()
-    try:
-      ind = dtarr.index(other.combined_sorted[0][0])
-    except ValueError:
-      return -1
-    return ind
+    return self.get_date_loc(other.combined_sorted[0][0])
 
   def length(self):
     return self.xs.size
@@ -130,14 +125,12 @@ class graphanalysis:
        else:
          print "Not related"
          return
-    self.dtarr = [y[1] for y in cor_list]
-    self.arr = [x[0] for x in cor_list]
-    #data = np.array([[y[1] for y in cor_list], [x[0] for x in cor_list]])
-    #cor_coe = np.corrcoef(data)
-    #print "The correlation coefficient number is ", cor_coe
+    print cor_list
+    data = np.array([[y[1] for y in cor_list], [x[0] for x in cor_list]])
+    cor_coe = np.corrcoef(data)
+    print "The correlation coefficient number is ", cor_coe
     
     """
-<<<<<<< HEAD
 print cor_list
 #pylab.plot_date([x[1] for x in cor_list],[y[0] for y in cor_list])
 self.xs = pylab.arrange(0, len(cor_list),1)
@@ -147,60 +140,65 @@ self.ys = self.polynom(self.xs)
 self.run_plot()
 #self.xs = pylab.arange(0,len(self.dtarr)-delay,1)
 """
-=======
-    print cor_list
-    #pylab.plot_date([x[1] for x in cor_list],[y[0] for y in cor_list])
-    self.xs = pylab.arrange(0, len(cor_list),1)
-    self.coeff = np.polyfit(self.xs, [y[0] for y in cor_list],10)
-    self.polynom = np.poly1d(self.coeff)
-    self.ys = self.polynom(self.xs)
-    self.run_plot()
-      #self.xs = pylab.arange(0,len(self.dtarr)-delay,1)
-    """
-<<<<<<< HEAD
 
-=======
->>>>>>> cac031fab3579bc9496f45c5ef95795ba483470d
->>>>>>> upstream/master
   def correlate(self, other):
     # use: self.arr, other.arr, and call scipy's correlation function
     pass
     #subset = self.arr[62: 62+other.length()]
     #correlate(subset, other.arr)
 
+  def get_date_loc(self, findme):
+    dtarr = self.dtarr.tolist()
+    try:
+      ind = dtarr.index(findme)
+    except ValueError:
+      return -1
+    return ind
+
   def save_plot(self, filename, plot_len=0, plot_start=0):
+    fig = pylab.figure()
+    ax = fig.add_subplot(111)
+    
     if plot_len > 0:
-      pylab.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], 'o')
+      ax.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], 'o')
     else:
-      pylab.plot_date(self.dtarr, self.arr, 'o')
+      ax.plot_date(self.dtarr, self.arr, 'o')
 
     if self.ys is None:
       pass
     else:
       # was: pylab.plot_date(self.dtarr, self.ys, '-')
       if plot_len > 0:
-        pylab.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], '-')
+        ax.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], '-')
       else:
-        pylab.plot_date(self.dtarr, self.ys, '-')
+        ax.plot_date(self.dtarr, self.ys, '-')
 
-    pylab.ylabel('y')
-    pylab.xlabel('x')
+    if self.rcvd_type == 'stock':
+      ax.set_title('Stock Price')
+    elif self.rcvd_type == 'tweet':
+      ax.set_title('Tweet Sentiment')
+    else:
+      pass
 
-    pylab.savefig(filename)
+    ax.set_ylabel('y')
+    ax.set_xlabel('x')
+  
+    labels = ax.get_xticklabels()
+    for label in labels:
+      label.set_rotation(30)
+
+    ax.savefig(filename)
 
   def run_plot(self, plot_len=0, plot_start=0):
-    print "debug output first:"
-    print "*** dtarr: "
-    print self.dtarr
-    print "*** arr: "
-    print self.arr
+    fig = pylab.figure()
+    ax = fig.add_subplot(111)
     
     print "plotting raw datapoints"
     # was: pylab.plot_date(self.dtarr, self.arr, 'o')
     if plot_len > 0:
-      pylab.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], 'o')
+      ax.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], 'o')
     else:
-      pylab.plot_date(self.dtarr, self.arr, 'o')
+      ax.plot_date(self.dtarr, self.arr, 'o')
 
     # have we interpolated recently?
     if self.ys is None:
@@ -208,13 +206,23 @@ self.run_plot()
     else:
       print "plotting interpolated datapoints"
       if plot_len > 0:
-        pylab.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], '-')
+        ax.plot_date(self.dtarr[plot_start:plot_len+plot_start], self.ys[plot_start:plot_len+plot_start], '-')
       else:
-        pylab.plot_date(self.dtarr, self.ys, '-')
+        ax.plot_date(self.dtarr, self.ys, '-')
 
-    pylab.ylabel('y')
-    pylab.xlabel('x')
+    if self.rcvd_type == 'stock':
+      ax.set_title('Stock Price')
+    elif self.rcvd_type == 'tweet':
+      ax.set_title('Tweet Sentiment')
+    else:
+      pass
 
+    ax.set_ylabel('y')
+    ax.set_xlabel('x')
+  
+    labels = ax.get_xticklabels()
+    for label in labels:
+      label.set_rotation(30)
 
     pylab.show()
 
@@ -258,7 +266,7 @@ if __name__ == "__main__":
 
   stk = graphanalysis(rcvd, 'stock')
   stk.interpolate(10)
-  stk.run_plot()
+  #stk.run_plot()
 
   #############################################################
   #### bring in tweet info ####################################
@@ -287,24 +295,19 @@ if __name__ == "__main__":
   print "twt times within stk?"
   print stk.starts_within(twt)
   print "interpolate the graph"
-  #twt.interpolate(10)
+  twt.interpolate(10)
   print "plot it!"
   twt.run_plot()
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
 
   # example of showing stocks based on twitter date data
   stk.run_plot(twt.length(), stk.starts_within(twt))
-=======
->>>>>>> upstream/master
   
   stk.correlation(twt)
-  stk.run_plot()
   #stk.run_plot(twt.length(), stk.starts_within(twt))
-<<<<<<< HEAD
-=======
->>>>>>> cac031fab3579bc9496f45c5ef95795ba483470d
->>>>>>> upstream/master
-
-
+  x = [1,2,3,4,5,6]
+  y = [2,30,4,5,-6,-7]
+  X = np.vstack((x,y))
+  print np.corrcoef(X)
+  # example of showing stocks based on arbritrary date selection
+  #dt = datetime(2013,1,30)
+  #stk.run_plot(10, stk.get_date_loc(dt))
